@@ -1,5 +1,5 @@
 
-from .bedges import bedges, colorEdges, bedges_from_image, bspread
+from .bedges import bedges, bcolorEdges, colorEdges, colorEdges_hsl, bedges_from_image, bspread
 from .spread_patches import spread_patches, spread_patches_new
 from .code_parts import (code_parts,
                          code_parts_many,

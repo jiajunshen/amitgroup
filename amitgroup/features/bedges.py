@@ -165,9 +165,14 @@ def bedges(images, k=6, spread='box', radius=1, minimum_contrast=0.0,
 
     if single:
         features = features[0]
-
     return features
 
+def bcolorEdges(images, **settings):
+    edges = bedges(np.mean(images, axis = -1), **settings)
+    colorFeature = colorEdges_hsl(images)
+    result = np.concatenate((edges, colorFeature), axis = -1)
+    return result
+    
 
 def colorEdges(images, episilon = 0.01):
     assert images.ndim == 4
@@ -181,6 +186,39 @@ def colorEdges(images, episilon = 0.01):
     colorFeature = np.uint8(colorFeature[:,:,:,:2,:])
     return colorFeature.reshape(colorFeature.shape[0:3]+(6,))
     
+
+def colorEdges_hsl(images):
+    import colorsys
+    assert images.ndim == 4
+    colorFeature = np.zeros((images.shape[0:3] + (21,)),dtype = np.uint8)
+    for i in range(images.shape[0]):
+        for j in range(images.shape[1]):
+            for k in range(images.shape[2]):
+                hlsColor = colorsys.rgb_to_hls(images[i,j,k,0],images[i,j,k,1],images[i,j,k,2])
+                h = int(hlsColor[0] * 360 / 20.001)
+                if(hlsColor[1]<=0.1):
+                    # This is BLACK
+                    l = 0
+                    codeLocation = 0
+                elif(hlsColor[1]>=0.9):
+                    # This is WHITE
+                    l = 1
+                    codeLocation = 1
+                else:
+                    l = 2
+                if(hlsColor[2]<=0.1):
+                    # This is grey
+                    s = 0
+                    codeLocation = 2
+                else:
+                    s = 1
+                if(s == 1 and l == 2):
+                    codeLocation = h + 3
+                a = j - 1 if j > 0 else 0
+                b = k - 1 if k > 0 else 0
+                #colorFeature[i, a:j + 1, b: k + 1, codeLocation] = 1
+                colorFeature[i,j,k,codeLocation] = 1
+    return colorFeature
 
 def bedges_from_image(im, k=6, spread='box', radius=1, minimum_contrast=0.0,
         contrast_insensitive=False, first_axis=False, return_original=False):
